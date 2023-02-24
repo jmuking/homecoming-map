@@ -13,7 +13,8 @@ function App() {
       })
       .then(
         function () {
-          console.log(gapi.client);
+          console.log("hey");
+          loadClient();
         },
         function (err: any) {
           console.error(err);
@@ -22,6 +23,7 @@ function App() {
   }
 
   function loadClient() {
+    console.log("woah");
     gapi.client.setApiKey("AIzaSyD6hzaZIs4hIA6pBlI4CiMa77-ex8RQN88");
     return gapi.client
       .load("https://forms.googleapis.com/$discovery/rest?version=v1")
