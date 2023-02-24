@@ -7,6 +7,37 @@ function App() {
 
   function onOneTapSignedIn(response: any) {
     console.log(response);
+    loadClient();
+  }
+
+  function loadClient() {
+    google.client.setApiKey("AIzaSyDr-NsioXIVsF33dprft5TtPOWM1uimUNc");
+    return google.client
+      .load("https://forms.googleapis.com/$discovery/rest?version=v1")
+      .then(
+        function () {
+          console.log("GAPI client loaded for API");
+        },
+        function (err: any) {
+          console.error("Error loading GAPI client for API", err);
+        }
+      );
+  }
+  // Make sure the client is loaded and sign-in is complete before calling this method.
+  function execute() {
+    return google.client.forms.forms
+      .batchUpdate({
+        resource: {},
+      })
+      .then(
+        function (response: any) {
+          // Handle the results here (response.result has the parsed body).
+          console.log("Response", response);
+        },
+        function (err: any) {
+          console.error("Execute error", err);
+        }
+      );
   }
 
   useEffect(() => {
@@ -48,7 +79,11 @@ function App() {
     }
   }, [google]);
 
-  return <div className="App"></div>;
+  return (
+    <div className="App">
+      {google?.client?.forms && <button onClick={execute}>Execute</button>}
+    </div>
+  );
 }
 
 export default App;
