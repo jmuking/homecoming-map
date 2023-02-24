@@ -72,31 +72,6 @@ function App() {
     return [sum[0] / CHOICES.length, sum[1] / CHOICES.length];
   }
 
-  function choiceInteract(attributes: any) {
-    const oid = attributes.ObjectID;
-
-    return choiceLayer?.queryFeatures({
-      where: `ObjectID = ${oid}`,
-      outFields: ["*"],
-    });
-  }
-
-  function choiceClick(attributes: any) {
-    choiceInteract(attributes)?.then((results) => {
-      const allAttributes = results.features[0].attributes;
-      const place = allAttributes.place;
-      window.open(FORMURL + place);
-    });
-  }
-
-  function choiceHover(attributes: any) {
-    choiceInteract(attributes)?.then((results) => {
-      const allAttributes = results.features[0].attributes;
-      const place = allAttributes.place;
-      setTipInfoText(`Are you REALLY sure you want to go to ${place}`);
-    });
-  }
-
   useEffect(() => {
     if (mapRef?.current) {
       const map = new Map({
@@ -137,42 +112,7 @@ function App() {
 
       view.when(() => {
         view.whenLayerView(layer).then(() => {
-          function eventHandler(event: any, func: (attributes: any) => void) {
-            const mapPoint = webMercatorUtils.project(
-              view.toMap({ x: event.x, y: event.y }),
-              { wkid: 4326 }
-            ) as Point;
-
-            let found = false;
-
-            for (const i in CHOICES) {
-              const choice = CHOICES[i];
-
-              const xDif = choice.geometry.x / mapPoint.x;
-              const yDif = choice.geometry.y / mapPoint.y;
-
-              if (
-                xDif < 1.005 &&
-                xDif > 0.995 &&
-                yDif < 1.005 &&
-                yDif > 0.995
-              ) {
-                found = true;
-                func(choice.attributes);
-                break;
-              }
-            }
-
-            return found;
-          }
-
-          view.on("click", (event) => {
-            eventHandler(event, choiceClick);
-          });
-
-          view.on("pointer-move", (event) => {
-            if (!eventHandler(event, choiceHover)) setTipInfoText(null);
-          });
+          setEsriView(view);
 
           view.goTo({
             center: centerPt(),
@@ -183,6 +123,68 @@ function App() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mapRef]);
+
+  useEffect(() => {
+    function choiceInteract(attributes: any) {
+      const oid = attributes.ObjectID;
+
+      return choiceLayer?.queryFeatures({
+        where: `ObjectID = ${oid}`,
+        outFields: ["*"],
+      });
+    }
+
+    function choiceClick(attributes: any) {
+      choiceInteract(attributes)?.then((results) => {
+        const allAttributes = results.features[0].attributes;
+        const place = allAttributes.place;
+        window.open(FORMURL + place);
+      });
+    }
+
+    function choiceHover(attributes: any) {
+      choiceInteract(attributes)?.then((results) => {
+        const allAttributes = results.features[0].attributes;
+        const place = allAttributes.place;
+        setTipInfoText(`Are you REALLY sure you want to go to ${place}`);
+      });
+    }
+
+    function eventHandler(event: any, func: (attributes: any) => void) {
+      if (!esriView) return false;
+
+      const mapPoint = webMercatorUtils.project(
+        esriView.toMap({ x: event.x, y: event.y }),
+        { wkid: 4326 }
+      ) as Point;
+
+      let found = false;
+
+      for (const i in CHOICES) {
+        const choice = CHOICES[i];
+
+        const xDif = choice.geometry.x / mapPoint.x;
+        const yDif = choice.geometry.y / mapPoint.y;
+
+        if (xDif < 1.005 && xDif > 0.995 && yDif < 1.005 && yDif > 0.995) {
+          found = true;
+          func(choice.attributes);
+          break;
+        }
+      }
+
+      return found;
+    }
+
+    esriView?.on("click", (event) => {
+      eventHandler(event, choiceClick);
+    });
+
+    esriView?.on("pointer-move", (event) => {
+      const found = eventHandler(event, choiceHover);
+      if (!found) setTipInfoText(null);
+    });
+  }, [choiceLayer, esriView]);
 
   return (
     <div className="app">
