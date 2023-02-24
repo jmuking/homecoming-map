@@ -1,16 +1,39 @@
+@import "https://js.arcgis.com/4.26/esri/themes/light/main.css";
+
 #root,
 body {
   height: 100vh;
   width: 100vw;
 }
 
-.App {
+.app {
   text-align: center;
   display: flex;
   flex-direction: column;
   height: 100%;
 }
 
-#g_id_onload {
+.app .map {
   flex: 1;
+}
+
+.app .tip-container {
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  right: 20px;
+  top: 20px;
+  padding: 1rem;
+  z-index: 100;
+  background: white;
+  border-radius: 0.5rem;
+}
+
+.app .tip-container .tip-text {
+  margin: 0;
+}
+
+.app .tip-container .tip-info {
+  margin: 0;
+  margin-top: 1rem;
 }
